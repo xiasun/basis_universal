@@ -18,7 +18,6 @@ if (EMSCRIPTEN)
       OUTPUT_NAME "basis_transcoder"
       SUFFIX ".js"
       LINK_FLAGS "
-        -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' 
         -s ALLOW_MEMORY_GROWTH=1 -O3 
         -s ASSERTIONS=0 
         -s MALLOC=emmalloc 
