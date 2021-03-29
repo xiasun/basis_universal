@@ -831,7 +831,7 @@ bool deinit_etc1s_transcoder(int idx) {
 		printf("deinit idx overflow!");
 		return false;
 	}
-	delete transcoders->[idx];
+	delete transcoders[idx];
 	return true;
 }
 
