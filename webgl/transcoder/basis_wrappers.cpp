@@ -30,6 +30,7 @@
 #include "basisu_transcoder.h"
 #include <emscripten/bind.h>
 #include <algorithm>
+#include <vector>
 
 #if BASISU_SUPPORT_ENCODING
 #include "../../encoder/basisu_comp.h"
@@ -731,6 +732,108 @@ public:
 		return true;
 	}
 };
+
+/*
+ * for interaction with js with cwarp
+ * 
+ */
+static std::vector<lowlevel_etc1s_image_transcoder *> transcoders = new std::vector(lowlevel_etc1s_image_transcoder *);
+
+/// create transcoder instance and return index
+int init_etc1s_transcoder() {
+	printf("sx: init_lowlevel_etc1s_image_transcoder %d", transcoders.size());
+	transcoders.push_back(new lowlevel_etc1s_image_transcoder());
+	return transcoders.size() - 1;
+}
+
+bool etc1s_transcoder_decode_palettes(
+	int idx, 
+	uint32_t num_endpoints, 
+	const emscripten::val& endpoint_data, 
+	uint32_t num_selectors, 
+	const emscripten::val& selector_data) {
+	printf("sx: lowlevel_etc1s_image_transcoder_decode_palettes %d", idx);
+	if (idx >= transcoders.size()) {
+		printf("decode_palettes idx overflow!");
+		return false;
+	}
+	return transcoders[idx].decode_palettes(
+		num_endpoints, 
+		endpoint_data, 
+		num_selectors, 
+		selector_data
+	);
+}
+
+bool etc1s_transcoder_decode_tables(
+	int idx, 
+	const emscripten::val& table_data) {
+	printf("sx: lowlevel_etc1s_image_transcoder_decode_tables %d", idx);
+	if (idx >= transcoders.size()) {
+		printf("decode_tables idx overflow!");
+		return false;
+	}
+	return transcoders[idx].decode_tables(
+		table_data
+	);
+}
+
+bool etc1s_transcoder_transcode_image(
+	int idx,
+	uint32_t target_format, // see transcoder_texture_format
+	const emscripten::val& output_blocks, 
+	uint32_t output_blocks_buf_size_in_blocks_or_pixels,
+	const emscripten::val& compressed_data,
+	uint32_t num_blocks_x, 
+	uint32_t num_blocks_y, 
+	uint32_t orig_width, 
+	uint32_t orig_height, 
+	uint32_t level_index, 
+	uint32_t rgb_offset, 
+	uint32_t rgb_length, 
+	uint32_t alpha_offset, 
+	uint32_t alpha_length,
+	uint32_t decode_flags, // see cDecodeFlagsPVRTCDecodeToNextPow2
+	bool basis_file_has_alpha_slices,
+	bool is_video,
+	uint32_t output_row_pitch_in_blocks_or_pixels,
+	uint32_t output_rows_in_pixels) {
+	printf("sx: lowlevel_etc1s_image_transcoder_transcode_image %d", idx);
+	if (idx >= transcoders.size()) {
+		printf("transcode_image idx overflow!");
+		return false;
+	}
+	return transcoders[idx].transcode_image(
+		target_format,
+		output_blocks, 
+		output_blocks_buf_size_in_blocks_or_pixels,
+		compressed_data,
+		num_blocks_x, 
+		num_blocks_y, 
+		orig_width, 
+		orig_height, 
+		level_index, 
+		rgb_offset, 
+		rgb_length, 
+		alpha_offset, 
+		alpha_length,
+		decode_flags,
+		basis_file_has_alpha_slices,
+		is_video,
+		output_row_pitch_in_blocks_or_pixels,
+		output_rows_in_pixels
+	);
+}
+
+bool deinit_etc1s_transcoder(int idx) {
+	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d", idx);
+	if (idx >= transcoders.size()) {
+		printf("deinit idx overflow!");
+		return false;
+	}
+	delete transcoders[idx];
+	return true;
+}
 
 bool transcode_uastc_image(
 	uint32_t target_format_int, // see transcoder_texture_format
