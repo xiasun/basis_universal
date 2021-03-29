@@ -737,7 +737,7 @@ public:
  * for interaction with js with cwarp
  * 
  */
-static std::vector<lowlevel_etc1s_image_transcoder *> transcoders = new std::vector(lowlevel_etc1s_image_transcoder *);
+static std::vector<lowlevel_etc1s_image_transcoder *> transcoders = new std::vector<lowlevel_etc1s_image_transcoder *>();
 
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
@@ -757,7 +757,7 @@ bool etc1s_transcoder_decode_palettes(
 		printf("decode_palettes idx overflow!");
 		return false;
 	}
-	return transcoders[idx].decode_palettes(
+	return transcoders[idx]->decode_palettes(
 		num_endpoints, 
 		endpoint_data, 
 		num_selectors, 
@@ -773,7 +773,7 @@ bool etc1s_transcoder_decode_tables(
 		printf("decode_tables idx overflow!");
 		return false;
 	}
-	return transcoders[idx].decode_tables(
+	return transcoders[idx]->decode_tables(
 		table_data
 	);
 }
@@ -803,7 +803,7 @@ bool etc1s_transcoder_transcode_image(
 		printf("transcode_image idx overflow!");
 		return false;
 	}
-	return transcoders[idx].transcode_image(
+	return transcoders[idx]->transcode_image(
 		target_format,
 		output_blocks, 
 		output_blocks_buf_size_in_blocks_or_pixels,
@@ -831,7 +831,7 @@ bool deinit_etc1s_transcoder(int idx) {
 		printf("deinit idx overflow!");
 		return false;
 	}
-	delete transcoders[idx];
+	delete transcoders->[idx];
 	return true;
 }
 
