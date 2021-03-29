@@ -739,6 +739,8 @@ public:
  */
 static std::vector<lowlevel_etc1s_image_transcoder *> transcoders;
 
+extern "C" {
+
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
 	printf("sx: init_lowlevel_etc1s_image_transcoder %d", transcoders.size());
@@ -833,6 +835,8 @@ bool deinit_etc1s_transcoder(int idx) {
 	}
 	delete transcoders[idx];
 	return true;
+}
+
 }
 
 bool transcode_uastc_image(
