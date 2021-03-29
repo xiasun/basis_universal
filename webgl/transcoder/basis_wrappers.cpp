@@ -852,6 +852,7 @@ uint32_t get_format_block_height(uint32_t transcoder_tex_fmt)
 	return basis_get_block_height(static_cast<transcoder_texture_format>(transcoder_tex_fmt));
 }
 
+/*
 EMSCRIPTEN_BINDINGS(basis_codec) {
   function("initializeBasis", &basis_init);
 
@@ -1292,3 +1293,4 @@ EMSCRIPTEN_BINDINGS(basis_codec) {
 #endif // BASISU_SUPPORT_ENCODING
     
 }
+*/
