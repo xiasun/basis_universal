@@ -737,7 +737,7 @@ public:
  * for interaction with js with cwarp
  * 
  */
-static std::vector<lowlevel_etc1s_image_transcoder *> transcoders = new std::vector<lowlevel_etc1s_image_transcoder *>();
+static std::vector<lowlevel_etc1s_image_transcoder *> transcoders;
 
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
