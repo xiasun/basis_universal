@@ -16,7 +16,6 @@ if (EMSCRIPTEN)
 
   string(CONCAT LINK_FLAGS_STR 
     "-s EXPORTED_FUNCTIONS='["
-      "\"_emval_new_cstring\","
       "\"_hehe\","
       "\"_haha\","
       "\"_basis_init\","
