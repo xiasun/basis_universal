@@ -46,7 +46,7 @@ if (EMSCRIPTEN)
     # "-s WASM=1 "
     # "-s RESERVED_FUNCTION_POINTERS=1 "
     # "-s FORCE_FILESYSTEM=1 "
-    "-s LLD_REPORT_UNDEFINED "
+    # "-s LLD_REPORT_UNDEFINED "
   )
   
   set_target_properties(basis_transcoder.js PROPERTIES
