@@ -15,6 +15,7 @@ if (EMSCRIPTEN)
   target_include_directories(basis_transcoder.js PRIVATE ../../transcoder)
 
   string(CONCAT LINK_FLAGS_STR 
+    "--bind "
     "-s EXPORTED_FUNCTIONS='["
       "\"_hehe\","
       "\"_haha\","
@@ -26,8 +27,8 @@ if (EMSCRIPTEN)
       "\"_format_is_uncompressed\","
       "\"_init_transcoder\","
       "\"_decode_palettes\","
-      # "\"_decode_tables\","
-      # "\"_transcode_image\","
+      "\"_decode_tables\","
+      "\"_transcode_image\","
       "\"_deinit_transcoder\""
       # "\"_init_etc1s_transcoder\","
       # "\"_etc1s_transcoder_decode_palettes\","
