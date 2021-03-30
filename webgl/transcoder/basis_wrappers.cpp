@@ -17,6 +17,17 @@
 //
 // 4. Helpers, transcoder texture format information: See functions getBytesPerBlockOrPixel(), formatHasAlpha(), etc.
 
+#include <stdio.h>
+
+extern "C" {
+
+void hehe() {
+	printf("hehe");
+	return;
+}
+
+}
+
 // If BASISU_SUPPORT_ENCODING is 1, wrappers for the compressor will be included. Otherwise, only the wrappers for the transcoder will be compiled in.
 #ifndef BASISU_SUPPORT_ENCODING
 #define BASISU_SUPPORT_ENCODING 0
@@ -43,6 +54,8 @@ using namespace basisu;
 
 static basist::etc1_global_selector_codebook* g_pGlobal_codebook;
 
+extern "C" {
+
 void basis_init()
 {
 #if BASISU_DEBUG_PRINTF
@@ -59,6 +72,8 @@ void basis_init()
 	basisu_transcoder_init();
 
 	g_pGlobal_codebook = new basist::etc1_global_selector_codebook(g_global_selector_cb_size, g_global_selector_cb);
+}
+
 }
 
 static void copy_from_jsbuffer(const emscripten::val& srcBuffer, basisu::vector<uint8_t>& dstVec)
@@ -739,8 +754,6 @@ public:
  */
 static std::vector<lowlevel_etc1s_image_transcoder *> transcoders;
 
-extern "C" {
-
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
 	printf("sx: init_lowlevel_etc1s_image_transcoder %d", transcoders.size());
@@ -837,6 +850,86 @@ bool deinit_etc1s_transcoder(int idx) {
 	return true;
 }
 
+extern "C" {
+
+void haha() {
+	printf("haha");
+	return;
+}
+
+int init_transcoder() {
+	return init_etc1s_transcoder();
+}
+
+bool decode_palettes(
+	int idx, 
+	uint32_t num_endpoints, 
+	const emscripten::val& endpoint_data, 
+	uint32_t num_selectors, 
+	const emscripten::val& selector_data) {
+	return etc1s_transcoder_decode_palettes(
+		idx, 
+		num_endpoints, 
+		endpoint_data, 
+		num_selectors, 
+		selector_data
+	);
+}
+
+bool decode_tables(
+	int idx, 
+	const emscripten::val& table_data) {
+	return etc1s_transcoder_decode_tables(idx, table_data);
+}
+
+bool transcode_image(
+	int idx,
+	uint32_t target_format, // see transcoder_texture_format
+	const emscripten::val& output_blocks, 
+	uint32_t output_blocks_buf_size_in_blocks_or_pixels,
+	const emscripten::val& compressed_data,
+	uint32_t num_blocks_x, 
+	uint32_t num_blocks_y, 
+	uint32_t orig_width, 
+	uint32_t orig_height, 
+	uint32_t level_index, 
+	uint32_t rgb_offset, 
+	uint32_t rgb_length, 
+	uint32_t alpha_offset, 
+	uint32_t alpha_length,
+	uint32_t decode_flags, // see cDecodeFlagsPVRTCDecodeToNextPow2
+	bool basis_file_has_alpha_slices,
+	bool is_video,
+	uint32_t output_row_pitch_in_blocks_or_pixels,
+	uint32_t output_rows_in_pixels) {
+	return etc1s_transcoder_transcode_image(
+		idx,
+		target_format, // see transcoder_texture_format
+		output_blocks, 
+		output_blocks_buf_size_in_blocks_or_pixels,
+		compressed_data,
+		num_blocks_x, 
+		num_blocks_y, 
+		orig_width, 
+		orig_height, 
+		level_index, 
+		rgb_offset, 
+		rgb_length, 
+		alpha_offset, 
+		alpha_length,
+		decode_flags, // see cDecodeFlagsPVRTCDecodeToNextPow2
+		basis_file_has_alpha_slices,
+		is_video,
+		output_row_pitch_in_blocks_or_pixels,
+		output_rows_in_pixels
+	);
+}
+
+bool deinit_transcoder(int idx) {
+	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d", idx);
+	return deinit_etc1s_transcoder(idx);
+}
+
 }
 
 bool transcode_uastc_image(
@@ -929,6 +1022,8 @@ bool transcode_uastc_image(
 	return true;
 }
 
+extern "C" {
+
 uint32_t get_bytes_per_block_or_pixel(uint32_t transcoder_tex_fmt)
 {
 	return basis_get_bytes_per_block_or_pixel(static_cast<transcoder_texture_format>(transcoder_tex_fmt));
@@ -957,6 +1052,8 @@ uint32_t get_format_block_width(uint32_t transcoder_tex_fmt)
 uint32_t get_format_block_height(uint32_t transcoder_tex_fmt)
 {
 	return basis_get_block_height(static_cast<transcoder_texture_format>(transcoder_tex_fmt));
+}
+	
 }
 
 /*
