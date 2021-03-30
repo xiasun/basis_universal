@@ -14,8 +14,35 @@ if (EMSCRIPTEN)
   target_compile_options(basis_transcoder.js PRIVATE -O3 -fno-strict-aliasing)
   target_include_directories(basis_transcoder.js PRIVATE ../../transcoder)
 
+  string(CONCAT LINK_FLAGS_STR 
+    "-s EXPORTED_FUNCTIONS='["
+      "\"_basis_init\","
+      "\"_is_format_supported\","
+      "\"_get_bytes_per_block_or_pixel\","
+      "\"_get_format_block_width\","
+      "\"_get_format_block_height\","
+      "\"_format_is_uncompressed\","
+      "\"_init_etc1s_transcoder\","
+      "\"_etc1s_transcoder_decode_palettes\","
+      "\"_etc1s_transcoder_decode_tables\","
+      "\"_etc1s_transcoder_transcode_image\","
+      "\"_deinit_etc1s_transcoder\""
+    "]' "
+    "-s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' "
+    "-s ALLOW_MEMORY_GROWTH=1 "
+    "-O3 "
+    "-s ASSERTIONS=0 "
+    "-s MALLOC=emmalloc "
+    "-s MODULARIZE=1 "
+    "-s EXPORT_NAME=BASIS "
+  )
+  
   set_target_properties(basis_transcoder.js PROPERTIES
       OUTPUT_NAME "basis_transcoder"
       SUFFIX ".js"
-      LINK_FLAGS "-s EXPORTED_FUNCTIONS='[\"_basis_init\",\"_is_format_supported\",\"_get_bytes_per_block_or_pixel\",\"_get_format_block_width\",\"_get_format_block_height\",\"_format_is_uncompressed\",\"_init_etc1s_transcoder\",\"_etc1s_transcoder_decode_palettes\",\"_etc1s_transcoder_decode_tables\",\"_etc1s_transcoder_transcode_image\",\"_deinit_etc1s_transcoder\"]' -s EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]' -s ALLOW_MEMORY_GROWTH=1 -O3 -s ASSERTIONS=0 -s MALLOC=emmalloc -s MODULARIZE=1 -s EXPORT_NAME=BASIS")
+      LINK_FLAGS ${LINK_FLAGS_STR})
+
+  message("\nLINK_FLAGS: \n")
+  message(${LINK_FLAGS_STR})
+  message("\n")
 endif()
