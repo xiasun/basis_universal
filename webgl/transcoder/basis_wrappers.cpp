@@ -22,7 +22,7 @@
 extern "C" {
 
 void hehe() {
-	printf("hehe");
+	printf("hehe\n");
 	return;
 }
 
@@ -35,7 +35,7 @@ void hehe() {
 
 // Enable debug printf()'s in this module.
 #ifndef BASISU_DEBUG_PRINTF
-#define BASISU_DEBUG_PRINTF 0
+#define BASISU_DEBUG_PRINTF 1
 #endif
 
 #include "basisu_transcoder.h"
@@ -78,7 +78,9 @@ void basis_init()
 
 static void copy_from_jsbuffer(const emscripten::val& srcBuffer, basisu::vector<uint8_t>& dstVec)
 {
+	printf("copy_from_jsbuffer hehe\n");
 	unsigned int length = srcBuffer["length"].as<unsigned int>();
+	printf("copy_from_jsbuffer %d\n", length);
 
 	dstVec.resize(length);
 
@@ -636,7 +638,7 @@ public:
 		copy_from_jsbuffer(endpoint_data, temp_endpoint_data);
 		copy_from_jsbuffer(selector_data, temp_selector_data);
 
-#if 0		
+#if 1		
 		printf("decode_palettes: %u %u %u %u, %u %u\n", 
 			num_endpoints, (uint32_t)temp_endpoint_data.size(),
 			num_selectors, (uint32_t)temp_selector_data.size(),
@@ -656,6 +658,13 @@ public:
 			num_selectors, &temp_selector_data[0], (uint32_t)temp_selector_data.size());
 	}
 	
+	bool decode_palettes(uint32_t num_endpoints, const uint8_t *endpoint_data, uint32_t endpoint_data_size, 
+		uint32_t num_selectors, const uint8_t *selector_data, uint32_t selector_data_size)
+	{
+		return basisu_lowlevel_etc1s_transcoder::decode_palettes(num_endpoints, endpoint_data, endpoint_data_size, 
+			num_selectors, selector_data, selector_data_size);
+	}
+
 	bool decode_tables(const emscripten::val& table_data)
 	{
 		basisu::vector<uint8_t> temp_table_data;
@@ -671,6 +680,12 @@ public:
 		}
 		
 		return basisu_lowlevel_etc1s_transcoder::decode_tables(&temp_table_data[0], (uint32_t)temp_table_data.size());
+	}
+
+	bool decode_tables(const uint8_t *table_data,
+		uint32_t table_data_size)
+	{	
+		return basisu_lowlevel_etc1s_transcoder::decode_tables(table_data, table_data_size);
 	}
 			
 	bool transcode_image(
@@ -746,6 +761,64 @@ public:
 
 		return true;
 	}
+
+	bool transcode_image(
+		uint32_t target_format,
+		// const emscripten::val& output_blocks, 
+		uint8_t *output_blocks,
+		uint32_t output_blocks_buf_size_in_blocks_or_pixels,
+		// const emscripten::val& compressed_data,
+		const uint8_t *compressed_data,
+		uint32_t compressed_data_size,
+		uint32_t num_blocks_x, 
+		uint32_t num_blocks_y, 
+		uint32_t orig_width, 
+		uint32_t orig_height, 
+		uint32_t level_index, 
+		uint32_t rgb_offset, 
+		uint32_t rgb_length, 
+		uint32_t alpha_offset, 
+		uint32_t alpha_length,
+		uint32_t decode_flags,
+		bool basis_file_has_alpha_slices,
+		bool is_video,
+		uint32_t output_row_pitch_in_blocks_or_pixels,
+		uint32_t output_rows_in_pixels)
+	{
+		if (!g_pGlobal_codebook)
+		{
+#if BASISU_DEBUG_PRINTF   
+			printf("transcode_etc1s_image: basis_init() must be called first\n");
+#endif   	
+			assert(0);
+			return false;
+		}
+						
+		bool status = basisu_lowlevel_etc1s_transcoder::transcode_image(
+			(transcoder_texture_format)target_format,
+			output_blocks, output_blocks_buf_size_in_blocks_or_pixels,
+			compressed_data, compressed_data_size,
+			num_blocks_x, num_blocks_y, orig_width, orig_height, level_index,
+			rgb_offset, rgb_length, alpha_offset, alpha_length,
+			decode_flags,
+			basis_file_has_alpha_slices,
+			is_video,
+			output_row_pitch_in_blocks_or_pixels,
+			&m_state,
+			output_rows_in_pixels);
+			
+		if (!status)
+		{
+#if BASISU_DEBUG_PRINTF   
+			printf("transcode_etc1s_image: basisu_lowlevel_etc1s_transcoder::transcode_image failed\n");
+#endif   
+			assert(0);
+			return false;
+		}
+
+		return true;
+	}
+
 };
 
 /*
@@ -756,7 +829,7 @@ static std::vector<lowlevel_etc1s_image_transcoder *> transcoders;
 
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
-	printf("sx: init_lowlevel_etc1s_image_transcoder %d", transcoders.size());
+	printf("sx: init_lowlevel_etc1s_image_transcoder %d\n", transcoders.size());
 	transcoders.push_back(new lowlevel_etc1s_image_transcoder());
 	return transcoders.size() - 1;
 }
@@ -764,10 +837,15 @@ int init_etc1s_transcoder() {
 bool etc1s_transcoder_decode_palettes(
 	int idx, 
 	uint32_t num_endpoints, 
-	const emscripten::val& endpoint_data, 
+	// const emscripten::val& endpoint_data,
+	const uint8_t *endpoint_data,
+	uint32_t endpoint_data_size,
 	uint32_t num_selectors, 
-	const emscripten::val& selector_data) {
-	printf("sx: lowlevel_etc1s_image_transcoder_decode_palettes %d", idx);
+	// const emscripten::val& selector_data
+	const uint8_t *selector_data,
+	uint32_t selector_data_size
+	) {
+	printf("sx: lowlevel_etc1s_image_transcoder_decode_palettes %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("decode_palettes idx overflow!");
 		return false;
@@ -775,30 +853,38 @@ bool etc1s_transcoder_decode_palettes(
 	return transcoders[idx]->decode_palettes(
 		num_endpoints, 
 		endpoint_data, 
+		endpoint_data_size,
 		num_selectors, 
-		selector_data
+		selector_data,
+		selector_data_size
 	);
 }
 
 bool etc1s_transcoder_decode_tables(
 	int idx, 
-	const emscripten::val& table_data) {
-	printf("sx: lowlevel_etc1s_image_transcoder_decode_tables %d", idx);
+	// const emscripten::val& table_data
+	uint8_t *table_data,
+	uint32_t table_data_size) {
+	printf("sx: lowlevel_etc1s_image_transcoder_decode_tables %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("decode_tables idx overflow!");
 		return false;
 	}
 	return transcoders[idx]->decode_tables(
-		table_data
+		table_data,
+		table_data_size
 	);
 }
 
 bool etc1s_transcoder_transcode_image(
 	int idx,
 	uint32_t target_format, // see transcoder_texture_format
-	const emscripten::val& output_blocks, 
+	// const emscripten::val& output_blocks, 
+	uint8_t *output_blocks,
 	uint32_t output_blocks_buf_size_in_blocks_or_pixels,
-	const emscripten::val& compressed_data,
+	// const emscripten::val& compressed_data,
+	const uint8_t *compressed_data,
+	uint32_t compressed_data_size,
 	uint32_t num_blocks_x, 
 	uint32_t num_blocks_y, 
 	uint32_t orig_width, 
@@ -813,7 +899,7 @@ bool etc1s_transcoder_transcode_image(
 	bool is_video,
 	uint32_t output_row_pitch_in_blocks_or_pixels,
 	uint32_t output_rows_in_pixels) {
-	printf("sx: lowlevel_etc1s_image_transcoder_transcode_image %d", idx);
+	printf("sx: lowlevel_etc1s_image_transcoder_transcode_image %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("transcode_image idx overflow!");
 		return false;
@@ -823,6 +909,7 @@ bool etc1s_transcoder_transcode_image(
 		output_blocks, 
 		output_blocks_buf_size_in_blocks_or_pixels,
 		compressed_data,
+		compressed_data_size,
 		num_blocks_x, 
 		num_blocks_y, 
 		orig_width, 
@@ -841,7 +928,7 @@ bool etc1s_transcoder_transcode_image(
 }
 
 bool deinit_etc1s_transcoder(int idx) {
-	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d", idx);
+	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("deinit idx overflow!");
 		return false;
@@ -853,41 +940,55 @@ bool deinit_etc1s_transcoder(int idx) {
 extern "C" {
 
 void haha() {
-	printf("haha");
+	printf("haha\n");
 	return;
 }
 
 int init_transcoder() {
+	printf("sx: init_transcoder\n");
 	return init_etc1s_transcoder();
 }
 
 bool decode_palettes(
 	int idx, 
 	uint32_t num_endpoints, 
-	const emscripten::val& endpoint_data, 
+	// const emscripten::val& endpoint_data, 
+	const uint8_t *endpoint_data,
+	uint32_t endpoint_data_size,
 	uint32_t num_selectors, 
-	const emscripten::val& selector_data) {
+	const uint8_t *selector_data,
+	uint32_t selector_data_size
+	// const emscripten::val& selector_data
+	) {
+	printf("sx: decode_palettes\n");
 	return etc1s_transcoder_decode_palettes(
 		idx, 
 		num_endpoints, 
 		endpoint_data, 
+		endpoint_data_size,
 		num_selectors, 
-		selector_data
+		selector_data,
+		selector_data_size
 	);
 }
 
 bool decode_tables(
 	int idx, 
-	const emscripten::val& table_data) {
-	return etc1s_transcoder_decode_tables(idx, table_data);
+	// const emscripten::val& table_data
+	uint8_t *table_data,
+	uint32_t table_data_size) {
+	return etc1s_transcoder_decode_tables(idx, table_data, table_data_size);
 }
 
 bool transcode_image(
 	int idx,
 	uint32_t target_format, // see transcoder_texture_format
-	const emscripten::val& output_blocks, 
+	// const emscripten::val& output_blocks, 
+	uint8_t *output_blocks,
 	uint32_t output_blocks_buf_size_in_blocks_or_pixels,
-	const emscripten::val& compressed_data,
+	// const emscripten::val& compressed_data,
+	const uint8_t *compressed_data,
+	uint32_t compressed_data_size,
 	uint32_t num_blocks_x, 
 	uint32_t num_blocks_y, 
 	uint32_t orig_width, 
@@ -908,6 +1009,7 @@ bool transcode_image(
 		output_blocks, 
 		output_blocks_buf_size_in_blocks_or_pixels,
 		compressed_data,
+		compressed_data_size,
 		num_blocks_x, 
 		num_blocks_y, 
 		orig_width, 
