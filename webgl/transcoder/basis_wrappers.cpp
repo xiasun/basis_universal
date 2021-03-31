@@ -35,7 +35,7 @@ void hehe() {
 
 // Enable debug printf()'s in this module.
 #ifndef BASISU_DEBUG_PRINTF
-#define BASISU_DEBUG_PRINTF 1
+#define BASISU_DEBUG_PRINTF 0
 #endif
 
 #include "basisu_transcoder.h"
@@ -78,9 +78,7 @@ void basis_init()
 
 static void copy_from_jsbuffer(const emscripten::val& srcBuffer, basisu::vector<uint8_t>& dstVec)
 {
-	printf("copy_from_jsbuffer hehe\n");
 	unsigned int length = srcBuffer["length"].as<unsigned int>();
-	printf("copy_from_jsbuffer %d\n", length);
 
 	dstVec.resize(length);
 
@@ -638,7 +636,7 @@ public:
 		copy_from_jsbuffer(endpoint_data, temp_endpoint_data);
 		copy_from_jsbuffer(selector_data, temp_selector_data);
 
-#if 1		
+#if 0		
 		printf("decode_palettes: %u %u %u %u, %u %u\n", 
 			num_endpoints, (uint32_t)temp_endpoint_data.size(),
 			num_selectors, (uint32_t)temp_selector_data.size(),
@@ -829,7 +827,6 @@ static std::vector<lowlevel_etc1s_image_transcoder *> transcoders;
 
 /// create transcoder instance and return index
 int init_etc1s_transcoder() {
-	printf("sx: init_lowlevel_etc1s_image_transcoder %d\n", transcoders.size());
 	transcoders.push_back(new lowlevel_etc1s_image_transcoder());
 	return transcoders.size() - 1;
 }
@@ -845,7 +842,6 @@ bool etc1s_transcoder_decode_palettes(
 	const uint8_t *selector_data,
 	uint32_t selector_data_size
 	) {
-	printf("sx: lowlevel_etc1s_image_transcoder_decode_palettes %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("decode_palettes idx overflow!");
 		return false;
@@ -865,7 +861,6 @@ bool etc1s_transcoder_decode_tables(
 	// const emscripten::val& table_data
 	uint8_t *table_data,
 	uint32_t table_data_size) {
-	printf("sx: lowlevel_etc1s_image_transcoder_decode_tables %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("decode_tables idx overflow!");
 		return false;
@@ -899,7 +894,6 @@ bool etc1s_transcoder_transcode_image(
 	bool is_video,
 	uint32_t output_row_pitch_in_blocks_or_pixels,
 	uint32_t output_rows_in_pixels) {
-	printf("sx: lowlevel_etc1s_image_transcoder_transcode_image %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("transcode_image idx overflow!");
 		return false;
@@ -928,7 +922,6 @@ bool etc1s_transcoder_transcode_image(
 }
 
 bool deinit_etc1s_transcoder(int idx) {
-	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d\n", idx);
 	if (idx >= transcoders.size()) {
 		printf("deinit idx overflow!");
 		return false;
@@ -945,7 +938,6 @@ void haha() {
 }
 
 int init_transcoder() {
-	printf("sx: init_transcoder\n");
 	return init_etc1s_transcoder();
 }
 
@@ -960,7 +952,6 @@ bool decode_palettes(
 	uint32_t selector_data_size
 	// const emscripten::val& selector_data
 	) {
-	printf("sx: decode_palettes\n");
 	return etc1s_transcoder_decode_palettes(
 		idx, 
 		num_endpoints, 
@@ -1028,7 +1019,6 @@ bool transcode_image(
 }
 
 bool deinit_transcoder(int idx) {
-	printf("sx: deinit_lowlevel_etc1s_image_transcoder %d", idx);
 	return deinit_etc1s_transcoder(idx);
 }
 
